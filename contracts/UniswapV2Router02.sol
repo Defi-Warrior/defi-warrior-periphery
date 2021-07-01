@@ -42,6 +42,10 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         if (IUniswapV2Factory(factory).getPair(tokenA, tokenB) == address(0)) {
             IUniswapV2Factory(factory).createPair(tokenA, tokenB);
         }
+        address pair = UniswapV2Library.pairFor(factory, tokenA, tokenB);
+
+        require(IUniswapV2Pair(pair).allowedToFarm(msg.sender), "You must deposit your NFT warrior first");
+
         (uint reserveA, uint reserveB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
         if (reserveA == 0 && reserveB == 0) {
             (amountA, amountB) = (amountADesired, amountBDesired);
