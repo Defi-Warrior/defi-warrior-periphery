@@ -2,6 +2,23 @@
 # yarn lockfile v1
 
 
+"@chainlink/contracts@^0.2.0-rc1":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@chainlink/contracts/-/contracts-0.2.0.tgz#0d9c2f2a9036e4a8560238da4133910c4c8b14e5"
+  integrity sha512-p6E8gZBr16V+geJjYRxixwkEjk0fci8ARSszzHxSqJY81/Ja6Z0K7uVb+Fq9iTvEDbBQjFV9Tnvym/a3Q6+1GQ==
+
+"@defi-warrior/core@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@defi-warrior/core/-/core-1.0.0.tgz#e1e31e7bf96f413e0ae5e7f9a5ce79e4342f6795"
+  integrity sha512-2IxvZgva9NuX/7AMjKz6eYteE0U4dvicxkUaWRiTWVz28zZDO+NLUPmLLgwnNe74CM2JPhV8wJ+z/2KdJNtm6A==
+  dependencies:
+    "@chainlink/contracts" "^0.2.0-rc1"
+
+"@defi-warrior/libs@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@defi-warrior/libs/-/libs-1.0.1.tgz#c36d2076e55b03cb892256cb68329092e6320a80"
+  integrity sha512-DgB2FWOtfJ3aAqPJtAf7LfU4F4O+OtKDIjjCp8noMelfZeifTVhciA9UFjx/uj/xCUD9sBUPB7NIGz/+M1rkfQ==
+
 "@ethereum-waffle/chai@^2.4.1":
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/@ethereum-waffle/chai/-/chai-2.4.1.tgz#47a6cc2eebaca775b169b524a6dc0cfcf3d3c22d"
@@ -132,16 +149,6 @@
   version "12.12.35"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.12.35.tgz#1e61b226c14380f4384f70cfe49a65c2c553ad2b"
   integrity sha512-ASYsaKecA7TUsDrqIGPNk3JeEox0z/0XR/WsJJ8BIX/9+SkMSImQXKWfU/yBrSyc7ZSE/NPqLu36Nur0miCFfQ==
-
-"@uniswap/lib@4.0.1-alpha":
-  version "4.0.1-alpha"
-  resolved "https://registry.yarnpkg.com/@uniswap/lib/-/lib-4.0.1-alpha.tgz#2881008e55f075344675b3bca93f020b028fbd02"
-  integrity sha512-f6UIliwBbRsgVLxIaBANF6w09tYqc6Y/qXdsrbEmXHyFA7ILiKrIwRFXe1yOg8M3cksgVsO9N7yuL2DdCGQKBA==
-
-"@uniswap/v2-core@1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@uniswap/v2-core/-/v2-core-1.0.0.tgz#e0fab91a7d53e8cafb5326ae4ca18351116b0844"
-  integrity sha512-BJiXrBGnN8mti7saW49MXwxDBRFiWemGetE58q8zgfnPPzQKq55ADltEILqOt6VFZ22kVeVKbF8gVd8aY3l7pA==
 
 "@web3-js/scrypt-shim@^0.1.0":
   version "0.1.0"

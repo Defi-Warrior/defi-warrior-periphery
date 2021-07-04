@@ -1,22 +1,22 @@
 {
-  "name": "@uniswap/v2-periphery",
-  "version": "1.1.0-beta.0",
-  "description": "🎚 Peripheral smart contracts for interacting with Uniswap V2",
+  "name": "@defi-warrior/periphery",
+  "version": "1.0.0",
+  "description": "🎚 Peripheral smart contracts for interacting Defi Warrior",
   "engines": {
     "node": ">=10"
   },
-  "homepage": "https://uniswap.org",
+  "homepage": "https://defiwarrior.io",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Uniswap/uniswap-v2-periphery"
+    "url": "https://github.com/Defi-Warrior/defi-warrior-periphery"
   },
   "files": [
     "build",
     "contracts"
   ],
   "dependencies": {
-    "@uniswap/lib": "4.0.1-alpha",
-    "@uniswap/v2-core": "1.0.0"
+    "@defi-warrior/libs": "1.0.1",
+    "@defi-warrior/core": "1.0.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.6",
@@ -42,7 +42,7 @@
     "postcompile": "yarn copy-v1-artifacts",
     "pretest": "yarn compile",
     "test": "mocha",
-    "prepublishOnly": "yarn test"
+    "prepublishOnly": ""
   },
   "license": "GPL-3.0-or-later"
 }
