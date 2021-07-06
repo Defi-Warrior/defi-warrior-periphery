@@ -38,7 +38,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         uint amountBDesired,
         uint amountAMin,
         uint amountBMin
-    ) internal virtual returns (uint amountA, uint amountB) {
+    ) internal virtual view returns (uint amountA, uint amountB) {
         address pair = IUniswapV2Factory(factory).getPair(tokenA, tokenB);
         require(pair != address(0), "Pair didnt exist");
         require(IUniswapV2Pair(pair).allowedToFarm(msg.sender), "You haven't deposit NFT Warrior to the pool");
