@@ -3,6 +3,7 @@ pragma solidity =0.6.6;
 import '@defi-warrior/core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@defi-warrior/libs/contracts/utils/TransferHelper.sol';
 import '@defi-warrior/core/contracts/interfaces/IUniswapV2Pair.sol';
+import '@defi-warrior/core/contracts/interfaces/INFTFactory.sol';
 
 import './interfaces/IUniswapV2Router02.sol';
 import './libraries/UniswapV2Library.sol';
@@ -15,19 +16,44 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
 
     address public immutable override factory;
     address public immutable override WETH;
+    address public nftFactory;
+    address public admin;
+
+    uint256 public MINIMUM_DEPOSIT = 300000;
 
     modifier ensure(uint deadline) {
         require(deadline >= block.timestamp, 'UniswapV2Router: EXPIRED');
         _;
     }
 
-    constructor(address _factory, address _WETH) public {
+    constructor(address _factory, address _nftFactory, address _WETH) public {
         factory = _factory;
+        nftFactory = _nftFactory;
         WETH = _WETH;
+        admin = msg.sender;
+    }
+
+    function updateMinimumDeposit(uint256 newValue) external {
+        require(msg.sender == admin, "Forbidden access");
+        MINIMUM_DEPOSIT = newValue;
     }
 
     receive() external payable {
         assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
+    }
+
+    // mint new NFT character
+    function mintCharacter(address token0, address token1, uint256 amount0In, uint256 amount1In) external returns (uint256 characterId) {
+        address pair = IUniswapV2Factory(factory).getPair(token0, token1);
+        require(amount0In > 0 && amount1In > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
+        require(IUniswapV2Pair(pair).estimateInputValues(amount0In, amount1In) >= MINIMUM_DEPOSIT, 'Deposit amount < minimum deposit');
+        
+        TransferHelper.safeTransferFrom(token0, msg.sender, admin, amount0In); // optimistically transfer tokens
+        TransferHelper.safeTransferFrom(token1, msg.sender, admin, amount1In); // optimistically transfer tokens
+
+        IUniswapV2Pair(pair).approveFarm(msg.sender);
+
+        return INFTFactory(nftFactory).mint(msg.sender, pair);
     }
 
     // **** ADD LIQUIDITY ****
