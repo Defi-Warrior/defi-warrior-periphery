@@ -38,6 +38,11 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         MINIMUM_DEPOSIT = newValue;
     }
 
+    function setAdmin(address _admin) external {
+        require(msg.sender == admin, "Forbidden access");
+        admin = _admin;
+    }
+
     receive() external payable {
         assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
     }
@@ -46,13 +51,13 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
     function mintCharacter(address token0, address token1, uint256 amount0In, uint256 amount1In) external returns (uint256 characterId) {
         address pair = IUniswapV2Factory(factory).getPair(token0, token1);
         require(amount0In > 0 && amount1In > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
-        require(IUniswapV2Pair(pair).estimateInputValues(amount0In, amount1In) >= MINIMUM_DEPOSIT, 'Deposit amount < minimum deposit');
+        (uint256 left, uint256 right) = IUniswapV2Pair(pair).estimateInputValues(amount0In, amount1In);
+
+        require(left + right>= MINIMUM_DEPOSIT, 'Deposit amount < minimum deposit');
         
         TransferHelper.safeTransferFrom(token0, msg.sender, admin, amount0In); // optimistically transfer tokens
         TransferHelper.safeTransferFrom(token1, msg.sender, admin, amount1In); // optimistically transfer tokens
-
-        IUniswapV2Pair(pair).approveFarm(msg.sender);
-
+        
         return INFTFactory(nftFactory).mint(msg.sender, pair);
     }
 
@@ -67,7 +72,6 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
     ) internal virtual view returns (uint amountA, uint amountB) {
         address pair = IUniswapV2Factory(factory).getPair(tokenA, tokenB);
         require(pair != address(0), "Pair didnt exist");
-        require(IUniswapV2Pair(pair).allowedToFarm(msg.sender), "You haven't deposit NFT Warrior to the pool");
 
         (uint reserveA, uint reserveB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
         if (reserveA == 0 && reserveB == 0) {
