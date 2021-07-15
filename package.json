@@ -1,6 +1,6 @@
 {
   "name": "@defi-warrior/periphery",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "🎚 Peripheral smart contracts for interacting Defi Warrior",
   "engines": {
     "node": ">=10"
@@ -16,11 +16,10 @@
   ],
   "dependencies": {
     "@defi-warrior/libs": "1.0.1",
-    "@defi-warrior/core": "1.0.3"
+    "@defi-warrior/core": "1.0.6"
   },
   "devDependencies": {
     "@ethersproject/solidity": "5.4.0",
-    "@uniswap/v2-core": "1.0.1",
     "@types/chai": "^4.2.6",
     "@types/mocha": "^5.2.7",
     "chai": "^4.2.0",
