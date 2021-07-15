@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@chainlink/contracts/-/contracts-0.2.0.tgz#0d9c2f2a9036e4a8560238da4133910c4c8b14e5"
   integrity sha512-p6E8gZBr16V+geJjYRxixwkEjk0fci8ARSszzHxSqJY81/Ja6Z0K7uVb+Fq9iTvEDbBQjFV9Tnvym/a3Q6+1GQ==
 
-"@defi-warrior/core@1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@defi-warrior/core/-/core-1.0.3.tgz#9f795f31eac97cd6c2d75e6c9d9cbf3c0e1ac59c"
-  integrity sha512-T0SBEWoqK+UTyNbUzKB6mURNjcQ035Fwfv1US2jYAuy0XvGu/so72/NamntKoDred0qU6LSv3wJswkifRAXqNg==
+"@defi-warrior/core@1.0.6":
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@defi-warrior/core/-/core-1.0.6.tgz#e28840cca06f299481d276bdc9082f55ba10038e"
+  integrity sha512-6/ebRktGMNYlZeZ24FTsRxjlaY+Iyp6pycaEglyd+K9hve18SQzDVQlwxxEfvH5j97scOVx3UpfkuYRfvYGk4g==
   dependencies:
     "@chainlink/contracts" "^0.2.0-rc1"
     "@defi-warrior/libs" "1.0.1"
@@ -215,11 +215,6 @@
   version "12.12.35"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.12.35.tgz#1e61b226c14380f4384f70cfe49a65c2c553ad2b"
   integrity sha512-ASYsaKecA7TUsDrqIGPNk3JeEox0z/0XR/WsJJ8BIX/9+SkMSImQXKWfU/yBrSyc7ZSE/NPqLu36Nur0miCFfQ==
-
-"@uniswap/v2-core@1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@uniswap/v2-core/-/v2-core-1.0.1.tgz#af8f508bf183204779938969e2e54043e147d425"
-  integrity sha512-MtybtkUPSyysqLY2U210NBDeCHX+ltHt3oADGdjqoThZaFRDKwM6k1Nb3F0A3hk5hwuQvytFWhrWHOEq6nVJ8Q==
 
 "@web3-js/scrypt-shim@^0.1.0":
   version "0.1.0"
