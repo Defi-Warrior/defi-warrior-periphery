@@ -30,6 +30,7 @@ describe('UniswapV2Router02', () => {
   let token1: Contract
   let router: Contract
   let factory: Contract
+  let nftFactory: Contract
 
   beforeEach(async function() {
     const fixture = await loadFixture(v2Fixture)
@@ -37,22 +38,23 @@ describe('UniswapV2Router02', () => {
     token1 = fixture.token1
     router = fixture.router
     factory = fixture.factory
+    nftFactory = fixture.nftFactory
   })
 
   it("Add liquidity success", async() => {
-    await factory.mintCharacter(token0.address, token1.address, expandTo18Decimals(15), expandTo18Decimals(15), overrides)
-    let pairAddress = await factory.getPair(token0.address, token1.address);
-    const Pair = new Contract(pairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
+    // let pairAddress = await factory.getPair(token0.address, token1.address);
+    // const Pair = new Contract(pairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
 
-    console.log("allowed to farm: ", await Pair.allowedToFarm(wallet.address))
+    // console.log("allowed to farm: ", await nftFactory.allowedToFarm(pairAddress, wallet.address))
     console.log("allowance: ", await token0.allowance(wallet.address, router.address))
-    console.log("token 0 addr: ", token0.address, "token1 address: ", token1.address)
 
     await router.addLiquidity(token0.address, token1.address, 
       expandTo18Decimals(1), expandTo18Decimals(1), 
       0, 0, 
       wallet.address, MaxUint256, overrides)
-      
+    
+    // await router.mintCharacter(token0.address, token1.address, expandTo18Decimals(15), expandTo18Decimals(15))
+
     // await expect(router.addLiquidity(token0.address, token1.address, 
     //   expandTo18Decimals(1), expandTo18Decimals(1), 
     //   0, 0, 

@@ -27,7 +27,8 @@ interface V2Fixture {
     factory: Contract
     router: Contract
     pair: Contract
-    WETHPair: Contract
+    WETHPair: Contract,
+    nftFactory: Contract
 }
 
 export async function v2Fixture(provider: Web3Provider, [wallet, other]: Wallet[]): Promise<V2Fixture> {
@@ -40,32 +41,37 @@ export async function v2Fixture(provider: Web3Provider, [wallet, other]: Wallet[
   const oracle0 = await deployContract(wallet, PriceFeed, ["FIWA"])
   const oracle1 = await deployContract(wallet, PriceFeed, ["BTC"])
 
-  const nftWarrior = await deployContract(wallet, NFTWarriror, ["Defi Warrior", "FIWA"], overrides);
+  const nftFactory = await deployContract(wallet, NFTWarriror, ["Defi Warrior", "FIWA"], overrides);
 
   // deploy factory
-  const factory = await deployContract(wallet, UniswapV2Factory, [wallet.address, nftWarrior.address])
-  await nftWarrior.transferOwnership(factory.address);
+  const factory = await deployContract(wallet, UniswapV2Factory, [wallet.address])
 
   // deploy routers
-  const router = await deployContract(wallet, UniswapV2Router02, [factory.address, WETH.address], overrides)
+  const router = await deployContract(wallet, UniswapV2Router02, [factory.address, nftFactory.address, WETH.address], overrides)
+
+  await nftFactory.setRouter(router.address);
 
   // initialize V2
-  await factory.createPair(tokenA.address, tokenB.address, oracle0.address, oracle1.address)
+  await factory.createPair(tokenA.address, tokenB.address)
   const pairAddress = await factory.getPair(tokenA.address, tokenB.address)
   const pair = new Contract(pairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
+
+  await factory.setPriceFeeds(tokenA.address, oracle0.address, tokenB.address, oracle1.address);
+
+  console.log("pair address: ", pairAddress);
 
   const token0Address = await pair.token0()
   const token0 = tokenA.address === token0Address ? tokenA : tokenB
   const token1 = tokenA.address === token0Address ? tokenB : tokenA
 
-  await factory.createPair(WETH.address, WETHPartner.address, oracle0.address, oracle1.address)
+  await factory.createPair(WETH.address, WETHPartner.address)
+
   const WETHPairAddress = await factory.getPair(WETH.address, WETHPartner.address)
   const WETHPair = new Contract(WETHPairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
 
   await token0.transfer(other.address, expandTo18Decimals(100))
   await token1.transfer(other.address, expandTo18Decimals(100))
-  await token0.approve(factory.address, expandTo18Decimals(1000))
-  await token1.approve(factory.address, expandTo18Decimals(1000))
+
   await token0.approve(router.address, expandTo18Decimals(1000))
   await token1.approve(router.address, expandTo18Decimals(1000))
 
@@ -79,7 +85,8 @@ export async function v2Fixture(provider: Web3Provider, [wallet, other]: Wallet[
     factory,
     router,
     pair,
-    WETHPair
+    WETHPair,
+    nftFactory
   }
 }
 
