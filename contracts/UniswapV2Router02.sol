@@ -69,9 +69,10 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         uint amountBDesired,
         uint amountAMin,
         uint amountBMin
-    ) internal virtual view returns (uint amountA, uint amountB) {
-        address pair = IUniswapV2Factory(factory).getPair(tokenA, tokenB);
-        require(pair != address(0), "Pair didnt exist");
+    ) internal virtual returns (uint amountA, uint amountB) {
+        if (IUniswapV2Factory(factory).getPair(tokenA, tokenB) == address(0)) {
+            IUniswapV2Factory(factory).createPair(tokenA, tokenB);
+        }
 
         (uint reserveA, uint reserveB) = UniswapV2Library.getReserves(factory, tokenA, tokenB);
         if (reserveA == 0 && reserveB == 0) {
@@ -103,7 +104,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         address pair = UniswapV2Library.pairFor(factory, tokenA, tokenB);
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
-        liquidity = IUniswapV2Pair(pair).mint(to);
+        // liquidity = IUniswapV2Pair(pair).mint(to);
     }
     function addLiquidityETH(
         address token,
