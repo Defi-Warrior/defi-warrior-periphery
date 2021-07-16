@@ -17,6 +17,15 @@ import UniswapV2Router02 from '../../build/UniswapV2Router02.json'
 const overrides = {
   gasLimit: 9999999
 }
+
+interface V1Fixture {
+  token0: Contract
+  token1: Contract
+  factory: Contract
+  router: Contract
+  nftFactory: Contract
+}
+
 interface V2Fixture {
     token0: Contract
     token1: Contract
@@ -31,6 +40,28 @@ interface V2Fixture {
     nftFactory: Contract
 }
 
+export async function v1Fixture(provider: Web3Provider, [wallet, other]: Wallet[]): Promise<V1Fixture> {
+  let token0 = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
+  let token1 = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
+  const WETH = await deployContract(wallet, WETH9)
+  const nftFactory = await deployContract(wallet, NFTWarriror, ["Defi Warrior", "FIWA"], overrides);
+
+  // deploy factory
+  const factory = await deployContract(wallet, UniswapV2Factory, [wallet.address])
+
+  // deploy routers
+  const router = await deployContract(wallet, UniswapV2Router02, [factory.address, nftFactory.address, WETH.address], overrides)
+
+  await token0.approve(router.address, expandTo18Decimals(1000))
+  await token1.approve(router.address, expandTo18Decimals(1000))
+  return {
+    token0,
+    token1,
+    factory,
+    router,
+    nftFactory
+  }
+}
 export async function v2Fixture(provider: Web3Provider, [wallet, other]: Wallet[]): Promise<V2Fixture> {
   // deploy tokens
   let tokenA = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
@@ -57,8 +88,6 @@ export async function v2Fixture(provider: Web3Provider, [wallet, other]: Wallet[
   const pair = new Contract(pairAddress, JSON.stringify(IUniswapV2Pair.abi), provider).connect(wallet)
 
   await factory.setPriceFeeds(tokenA.address, oracle0.address, tokenB.address, oracle1.address);
-
-  console.log("pair address: ", pairAddress);
 
   const token0Address = await pair.token0()
   const token0 = tokenA.address === token0Address ? tokenA : tokenB
