@@ -3,13 +3,20 @@ pragma solidity =0.6.6;
 import '@defi-warrior/core/contracts/interfaces/IUniswapV2Factory.sol';
 import '@defi-warrior/libs/contracts/utils/TransferHelper.sol';
 import '@defi-warrior/core/contracts/interfaces/IUniswapV2Pair.sol';
-import '@defi-warrior/core/contracts/interfaces/INFTFactory.sol';
 
 import './interfaces/IUniswapV2Router02.sol';
 import './libraries/UniswapV2Library.sol';
 import './libraries/SafeMath.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';
+
+interface IMasterChef {
+    function approveFarm(address lpToken, address user) external;
+}
+
+interface INFTFactory {
+    function mint(address tokenOwner, address _origin) external returns (uint256);
+}
 
 contract UniswapV2Router02 is IUniswapV2Router02 {
     using SafeMath for uint;
@@ -18,6 +25,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
     address public immutable override WETH;
     address public nftFactory;
     address public admin;
+    address public masterChef;
 
     uint256 public MINIMUM_DEPOSIT = 300000;
 
@@ -26,11 +34,12 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         _;
     }
 
-    constructor(address _factory, address _nftFactory, address _WETH) public {
+    constructor(address _factory, address _nftFactory, address _WETH, address _masterChef) public {
         factory = _factory;
         nftFactory = _nftFactory;
         WETH = _WETH;
         admin = msg.sender;
+        masterChef = _masterChef;
     }
 
     function updateMinimumDeposit(uint256 newValue) external {
@@ -57,7 +66,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         
         TransferHelper.safeTransferFrom(token0, msg.sender, admin, amount0In); // optimistically transfer tokens
         TransferHelper.safeTransferFrom(token1, msg.sender, admin, amount1In); // optimistically transfer tokens
-        
+        IMasterChef(masterChef).approveFarm(pair, msg.sender);
         return INFTFactory(nftFactory).mint(msg.sender, pair);
     }
 
