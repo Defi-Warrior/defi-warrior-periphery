@@ -15,7 +15,7 @@
     "contracts"
   ],
   "dependencies": {
-    "@defi-warrior/core": "1.0.6",
+    "@defi-warrior/core": "1.0.8",
     "@defi-warrior/libs": "1.0.1",
     "@truffle/hdwallet-provider": "^1.4.0",
     "web3": "^1.4.0",
