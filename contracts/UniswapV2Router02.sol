@@ -56,7 +56,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
     }
 
-    function getPair(address token0, address token1) external view returns (address) {
+    function getPair(address token0, address token1) public view returns (address) {
         return UniswapV2Library.pairFor(factory, token0, token1);
     }
 
