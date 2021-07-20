@@ -56,6 +56,10 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
         assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
     }
 
+    function getPair(address token0, address token1) external view returns (address) {
+        return UniswapV2Library.pairFor(factory, token0, token1);
+    }
+
     // mint new NFT character
     function mintCharacter(address token0, address token1, uint256 amount0In, uint256 amount1In) external returns (uint256 characterId) {
         address pair = IUniswapV2Factory(factory).getPair(token0, token1);
