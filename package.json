@@ -17,9 +17,7 @@
   "dependencies": {
     "@defi-warrior/core": "1.1.0",
     "@defi-warrior/libs": "1.0.1",
-    "@truffle/hdwallet-provider": "^1.4.0",
-    "web3": "^1.4.0",
-    "truffle": "^5.3.11"
+    "web3": "^1.4.0"
   },
   "devDependencies": {
     "@ethersproject/solidity": "5.4.0",
