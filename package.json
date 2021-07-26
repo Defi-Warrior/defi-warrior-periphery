@@ -1,6 +1,6 @@
 {
   "name": "@defi-warrior/periphery",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "🎚 Peripheral smart contracts for interacting Defi Warrior",
   "engines": {
     "node": ">=10"
@@ -15,7 +15,7 @@
     "contracts"
   ],
   "dependencies": {
-    "@defi-warrior/core": "1.1.0",
+    "@defi-warrior/core": "1.1.1",
     "@defi-warrior/libs": "1.0.1",
     "web3": "^1.4.0"
   },
