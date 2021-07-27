@@ -8,7 +8,8 @@ import DefiWarriorFactory from '@defi-warrior/core/build/DefiWarriorFactory.json
 import IDefiWarriorPair from '@defi-warrior/core/build/IDefiWarriorPair.json'
 import PriceFeed from '@defi-warrior/core/build/PriceFeed.json'
 import NFTWarriror from '@defi-warrior/core/build/NFTWarrior.json'
-import UniswapV2Library from '../../build/UniswapV2Library.json';
+import GemFactory from '@defi-warrior/farm/build/GemFactory.json'
+import MintableBEP20Token from '@defi-warrior/farm/build/MintableBEP20Token.json'
 
 import ERC20 from '../../build/ERC20.json'
 import WETH9 from '../../build/WETH9.json'
@@ -40,32 +41,14 @@ interface V2Fixture {
     nftFactory: Contract
 }
 
-export async function v1Fixture(provider: Web3Provider, [wallet, other]: Wallet[]): Promise<V1Fixture> {
-  let token0 = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
-  let token1 = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
-  const WETH = await deployContract(wallet, WETH9)
-  const nftFactory = await deployContract(wallet, NFTWarriror, ["Defi Warrior", "FIWA"], overrides);
-
-  // deploy factory
-  const factory = await deployContract(wallet, DefiWarriorFactory, [wallet.address])
-
-  // deploy routers
-  const router = await deployContract(wallet, DefiWarriorRouter, [factory.address, nftFactory.address, WETH.address], overrides)
-
-  await token0.approve(router.address, expandTo18Decimals(1000))
-  await token1.approve(router.address, expandTo18Decimals(1000))
-  return {
-    token0,
-    token1,
-    factory,
-    router,
-    nftFactory
-  }
-}
 export async function v2Fixture(provider: Web3Provider, [wallet, other]: Wallet[]): Promise<V2Fixture> {
   // deploy tokens
   let tokenA = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
   let tokenB = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
+
+  let fiwa = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
+  let gem = await deployContract(wallet, MintableBEP20Token, ["Gem token", "Gem"])
+  let ticket = await deployContract(wallet, MintableBEP20Token, ["Ticket token", "Ticket"])
 
   const WETH = await deployContract(wallet, WETH9)
   const WETHPartner = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
@@ -77,11 +60,16 @@ export async function v2Fixture(provider: Web3Provider, [wallet, other]: Wallet[
   // deploy factory
   const factory = await deployContract(wallet, DefiWarriorFactory, [wallet.address])
 
+  // deploy GemFactory
+  const gemFactory = await deployContract(wallet, GemFactory, [gem.address, ticket.address, wallet.address, 1])
+
   // deploy routers
-  const router = await deployContract(wallet, DefiWarriorRouter, [factory.address, nftFactory.address, tokenA.address, WETH.address, wallet.address], overrides)
+  const router = await deployContract(wallet, DefiWarriorRouter, [factory.address, nftFactory.address, tokenA.address, WETH.address, gemFactory.address], overrides)
 
   await nftFactory.setRouter(router.address);
-
+  await gem.transferOwnership(gemFactory.address)
+  await ticket.transferOwnership(gemFactory.address)
+  await gemFactory.updateRouter(router.address)
   // initialize V2
   await factory.createPair(tokenA.address, tokenB.address)
   const pairAddress = await factory.getPair(tokenA.address, tokenB.address)
