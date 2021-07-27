@@ -46,7 +46,6 @@ describe('UniswapV2Router02', () => {
 
     console.log("pair address: ", pairAddress);
 
-    console.log("allowed to farm: ", await nftFactory.allowedToFarm(pairAddress, wallet.address))
     console.log("allowance: ", await token0.allowance(wallet.address, router.address))
 
     await router.addLiquidity(token0.address, token1.address, 
@@ -56,11 +55,9 @@ describe('UniswapV2Router02', () => {
     
     await router.mintCharacter(token0.address, token1.address, expandTo18Decimals(15), expandTo18Decimals(15))
 
-    console.log("allowed to farm: ", await nftFactory.allowedToFarm(pairAddress, wallet.address))
+    // const testLib = await deployContract(wallet, TestLib);
 
-    const testLib = await deployContract(wallet, TestLib);
-
-    console.log("testLib address: ", await testLib.pairFor(factory.address, token0.address, token1.address))
+    // console.log("testLib address: ", await testLib.pairFor(factory.address, token0.address, token1.address))
 
     // await expect(router.addLiquidity(token0.address, token1.address, 
     //   expandTo18Decimals(1), expandTo18Decimals(1), 

@@ -4,7 +4,7 @@ import { deployContract } from 'ethereum-waffle'
 
 import { expandTo18Decimals } from './utilities'
 
-import UniswapV2Factory from '@defi-warrior/core/build/UniswapV2Factory.json'
+import DefiWarriorFactory from '@defi-warrior/core/build/DefiWarriorFactory.json'
 import IDefiWarriorPair from '@defi-warrior/core/build/IDefiWarriorPair.json'
 import PriceFeed from '@defi-warrior/core/build/PriceFeed.json'
 import NFTWarriror from '@defi-warrior/core/build/NFTWarrior.json'
@@ -12,7 +12,7 @@ import UniswapV2Library from '../../build/UniswapV2Library.json';
 
 import ERC20 from '../../build/ERC20.json'
 import WETH9 from '../../build/WETH9.json'
-import UniswapV2Router02 from '../../build/UniswapV2Router02.json'
+import DefiWarriorRouter from '../../build/DefiWarriorRouter.json'
 
 const overrides = {
   gasLimit: 9999999
@@ -47,10 +47,10 @@ export async function v1Fixture(provider: Web3Provider, [wallet, other]: Wallet[
   const nftFactory = await deployContract(wallet, NFTWarriror, ["Defi Warrior", "FIWA"], overrides);
 
   // deploy factory
-  const factory = await deployContract(wallet, UniswapV2Factory, [wallet.address])
+  const factory = await deployContract(wallet, DefiWarriorFactory, [wallet.address])
 
   // deploy routers
-  const router = await deployContract(wallet, UniswapV2Router02, [factory.address, nftFactory.address, WETH.address], overrides)
+  const router = await deployContract(wallet, DefiWarriorRouter, [factory.address, nftFactory.address, WETH.address], overrides)
 
   await token0.approve(router.address, expandTo18Decimals(1000))
   await token1.approve(router.address, expandTo18Decimals(1000))
@@ -75,10 +75,10 @@ export async function v2Fixture(provider: Web3Provider, [wallet, other]: Wallet[
   const nftFactory = await deployContract(wallet, NFTWarriror, ["Defi Warrior", "FIWA"], overrides);
 
   // deploy factory
-  const factory = await deployContract(wallet, UniswapV2Factory, [wallet.address])
+  const factory = await deployContract(wallet, DefiWarriorFactory, [wallet.address])
 
   // deploy routers
-  const router = await deployContract(wallet, UniswapV2Router02, [factory.address, nftFactory.address, WETH.address], overrides)
+  const router = await deployContract(wallet, DefiWarriorRouter, [factory.address, nftFactory.address, tokenA.address, WETH.address, wallet.address], overrides)
 
   await nftFactory.setRouter(router.address);
 
