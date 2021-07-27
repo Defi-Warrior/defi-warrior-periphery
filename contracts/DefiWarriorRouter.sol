@@ -1,6 +1,5 @@
 pragma solidity =0.6.6;
 
-import '@defi-warrior/core/contracts/interfaces/IDefiWarriorFactory.sol';
 import '@defi-warrior/libs/contracts/utils/TransferHelper.sol';
 import '@defi-warrior/core/contracts/interfaces/IDefiWarriorPair.sol';
 
@@ -10,13 +9,19 @@ import './libraries/SafeMath.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';
 
-interface IMasterChef {
+interface IGemFactory {
     function approveFarm(address lpToken, address user) external;
 }
 
 interface INFTFactory {
-    function mint(address tokenOwner, address _origin) external returns (uint256);
+    function mint(address tokenOwner, address id) external returns (uint256);
 }
+
+interface IDefiWarriorFactory {
+    function getPair(address tokenA, address tokenB) external view returns (address pair);
+    function createPair(address tokenA, address tokenB) external returns (address pair);
+}
+
 
 contract DefiWarriorRouter is IDefiWarriorRouter02 {
     using SafeMath for uint;
@@ -24,31 +29,40 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
     address public immutable override factory;
     address public immutable override WETH;
     address public nftFactory;
+    address public fiwa;
     address public admin;
-    address public masterChef;
+    address public gemFactory;
 
-    uint256 public MINIMUM_DEPOSIT = 300000;
+    uint256 public MINIMUM_DEPOSIT = 3000;
 
     modifier ensure(uint deadline) {
-        require(deadline >= block.timestamp, 'Defi Warrior Router: EXPIRED');
+        require(deadline >= block.timestamp, 'EXPIRED');
         _;
     }
 
-    constructor(address _factory, address _nftFactory, address _WETH, address _masterChef) public {
-        factory = _factory;
-        nftFactory = _nftFactory;
-        WETH = _WETH;
-        admin = msg.sender;
-        masterChef = _masterChef;
+    modifier onlyAdmin {
+        require(msg.sender == admin, 'Forbidden access');
+        _;
     }
 
-    function updateMinimumDeposit(uint256 newValue) external {
-        require(msg.sender == admin, "Defi Warrior Router: Forbidden access");
+    constructor(address _factory, address _nftFactory, address _fiwa, address _WETH, address _gemFactory) public {
+        factory = _factory;
+        nftFactory = _nftFactory;
+        fiwa = _fiwa;
+        WETH = _WETH;
+        admin = msg.sender;
+        gemFactory = _gemFactory;
+    }
+
+    function updateNFTFactory(address _nftFactory) external onlyAdmin {
+        nftFactory = _nftFactory;
+    }
+
+    function updateMinimumDeposit(uint256 newValue) external onlyAdmin {
         MINIMUM_DEPOSIT = newValue;
     }
 
-    function setAdmin(address _admin) external {
-        require(msg.sender == admin, "Defi Warrior Router: Forbidden access");
+    function setAdmin(address _admin) external onlyAdmin {
         admin = _admin;
     }
 
@@ -56,22 +70,28 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
     }
 
-    function getPair(address token0, address token1) public view returns (address) {
-        return UniswapV2Library.pairFor(factory, token0, token1);
+    function validateTokensValue(uint256 amount0,  uint256 amount1) internal view returns (bool) {
+        if (amount0 == 0 || amount1 == 0)
+            return false;
+        if (amount0 * 100 / amount1 < 80 || amount1 * 100 / amount0 < 80)
+            return false;
+        if (amount0 + amount1 < MINIMUM_DEPOSIT)
+            return false;
+        return true;
     }
 
     // mint new NFT character
     function mintCharacter(address token0, address token1, uint256 amount0In, uint256 amount1In) external returns (uint256 characterId) {
         address pair = IDefiWarriorFactory(factory).getPair(token0, token1);
-        require(amount0In > 0 && amount1In > 0, 'Defi Warrior Router: INSUFFICIENT_OUTPUT_AMOUNT');
         (uint256 left, uint256 right) = IDefiWarriorPair(pair).estimateInputValues(amount0In, amount1In);
-
-        require(left + right>= MINIMUM_DEPOSIT, 'Defi Warrior Router: amount < minimum deposit');
-        
+        require(validateTokensValue(left, right), "Invalid input tokens");
         TransferHelper.safeTransferFrom(token0, msg.sender, admin, amount0In); // optimistically transfer tokens
         TransferHelper.safeTransferFrom(token1, msg.sender, admin, amount1In); // optimistically transfer tokens
-        IMasterChef(masterChef).approveFarm(pair, msg.sender);
-        return INFTFactory(nftFactory).mint(msg.sender, pair);
+        IGemFactory(gemFactory).approveFarm(pair, msg.sender);
+
+        if (token0 == fiwa)
+            return INFTFactory(nftFactory).mint(msg.sender, token1);
+        return INFTFactory(nftFactory).mint(msg.sender, token0);
     }
 
     // **** ADD LIQUIDITY ****
@@ -93,12 +113,12 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         } else {
             uint amountBOptimal = UniswapV2Library.quote(amountADesired, reserveA, reserveB);
             if (amountBOptimal <= amountBDesired) {
-                require(amountBOptimal >= amountBMin, 'Defi Warrior Router: INSUFFICIENT_B_AMOUNT');
+                require(amountBOptimal >= amountBMin, 'INSUFFICIENT_B_AMOUNT');
                 (amountA, amountB) = (amountADesired, amountBOptimal);
             } else {
                 uint amountAOptimal = UniswapV2Library.quote(amountBDesired, reserveB, reserveA);
                 assert(amountAOptimal <= amountADesired);
-                require(amountAOptimal >= amountAMin, 'Defi Warrior Router: INSUFFICIENT_A_AMOUNT');
+                require(amountAOptimal >= amountAMin, 'INSUFFICIENT_A_AMOUNT');
                 (amountA, amountB) = (amountAOptimal, amountBDesired);
             }
         }
@@ -159,8 +179,8 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         (uint amount0, uint amount1) = IDefiWarriorPair(pair).burn(to);
         (address token0,) = UniswapV2Library.sortTokens(tokenA, tokenB);
         (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
-        require(amountA >= amountAMin, 'Defi Warrior Router: INSUFFICIENT_A_AMOUNT');
-        require(amountB >= amountBMin, 'Defi Warrior Router: INSUFFICIENT_B_AMOUNT');
+        require(amountA >= amountAMin, 'INSUFFICIENT_A_AMOUNT');
+        require(amountB >= amountBMin, 'INSUFFICIENT_B_AMOUNT');
     }
     function removeLiquidityETH(
         address token,
@@ -274,7 +294,7 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         uint deadline
     ) external virtual override ensure(deadline) returns (uint[] memory amounts) {
         amounts = UniswapV2Library.getAmountsOut(factory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, 'Defi Warrior Router: INSUFFICIENT_OUTPUT_AMOUNT');
+        require(amounts[amounts.length - 1] >= amountOutMin, 'INSUFFICIENT_OUTPUT_AMOUNT');
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
@@ -288,7 +308,7 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         uint deadline
     ) external virtual override ensure(deadline) returns (uint[] memory amounts) {
         amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= amountInMax, 'Defi Warrior Router: EXCESSIVE_INPUT_AMOUNT');
+        require(amounts[0] <= amountInMax, 'EXCESSIVE_INPUT_AMOUNT');
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
@@ -302,9 +322,9 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         ensure(deadline)
         returns (uint[] memory amounts)
     {
-        require(path[0] == WETH, 'Defi Warrior Router: INVALID_PATH');
+        require(path[0] == WETH, 'INVALID_PATH');
         amounts = UniswapV2Library.getAmountsOut(factory, msg.value, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, 'Defi Warrior Router: INSUFFICIENT_OUTPUT_AMOUNT');
+        require(amounts[amounts.length - 1] >= amountOutMin, 'INSUFFICIENT_OUTPUT_AMOUNT');
         IWETH(WETH).deposit{value: amounts[0]}();
         assert(IWETH(WETH).transfer(UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
@@ -316,9 +336,9 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         ensure(deadline)
         returns (uint[] memory amounts)
     {
-        require(path[path.length - 1] == WETH, 'Defi Warrior Router: INVALID_PATH');
+        require(path[path.length - 1] == WETH, 'INVALID_PATH');
         amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= amountInMax, 'Defi Warrior Router: EXCESSIVE_INPUT_AMOUNT');
+        require(amounts[0] <= amountInMax, 'EXCESSIVE_INPUT_AMOUNT');
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
@@ -333,9 +353,9 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         ensure(deadline)
         returns (uint[] memory amounts)
     {
-        require(path[path.length - 1] == WETH, 'Defi Warrior Router: INVALID_PATH');
+        require(path[path.length - 1] == WETH, 'INVALID_PATH');
         amounts = UniswapV2Library.getAmountsOut(factory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, 'Defi Warrior Router: INSUFFICIENT_OUTPUT_AMOUNT');
+        require(amounts[amounts.length - 1] >= amountOutMin, 'INSUFFICIENT_OUTPUT_AMOUNT');
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]
         );
@@ -351,9 +371,9 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         ensure(deadline)
         returns (uint[] memory amounts)
     {
-        require(path[0] == WETH, 'Defi Warrior Router: INVALID_PATH');
+        require(path[0] == WETH, 'INVALID_PATH');
         amounts = UniswapV2Library.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= msg.value, 'Defi Warrior Router: EXCESSIVE_INPUT_AMOUNT');
+        require(amounts[0] <= msg.value, 'EXCESSIVE_INPUT_AMOUNT');
         IWETH(WETH).deposit{value: amounts[0]}();
         assert(IWETH(WETH).transfer(UniswapV2Library.pairFor(factory, path[0], path[1]), amounts[0]));
         _swap(amounts, path, to);
@@ -395,7 +415,7 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         _swapSupportingFeeOnTransferTokens(path, to);
         require(
             IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >= amountOutMin,
-            'Defi Warrior Router: INSUFFICIENT_OUTPUT_AMOUNT'
+            'INSUFFICIENT_OUTPUT_AMOUNT'
         );
     }
     function swapExactETHForTokensSupportingFeeOnTransferTokens(
@@ -410,7 +430,7 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         payable
         ensure(deadline)
     {
-        require(path[0] == WETH, 'Defi Warrior Router: INVALID_PATH');
+        require(path[0] == WETH, 'INVALID_PATH');
         uint amountIn = msg.value;
         IWETH(WETH).deposit{value: amountIn}();
         assert(IWETH(WETH).transfer(UniswapV2Library.pairFor(factory, path[0], path[1]), amountIn));
@@ -418,7 +438,7 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         _swapSupportingFeeOnTransferTokens(path, to);
         require(
             IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >= amountOutMin,
-            'Defi Warrior Router: INSUFFICIENT_OUTPUT_AMOUNT'
+            'INSUFFICIENT_OUTPUT_AMOUNT'
         );
     }
     function swapExactTokensForETHSupportingFeeOnTransferTokens(
@@ -433,13 +453,13 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         override
         ensure(deadline)
     {
-        require(path[path.length - 1] == WETH, 'Defi Warrior Router: INVALID_PATH');
+        require(path[path.length - 1] == WETH, 'INVALID_PATH');
         TransferHelper.safeTransferFrom(
             path[0], msg.sender, UniswapV2Library.pairFor(factory, path[0], path[1]), amountIn
         );
         _swapSupportingFeeOnTransferTokens(path, address(this));
         uint amountOut = IERC20(WETH).balanceOf(address(this));
-        require(amountOut >= amountOutMin, 'Defi Warrior Router: INSUFFICIENT_OUTPUT_AMOUNT');
+        require(amountOut >= amountOutMin, 'INSUFFICIENT_OUTPUT_AMOUNT');
         IWETH(WETH).withdraw(amountOut);
         TransferHelper.safeTransferETH(to, amountOut);
     }
