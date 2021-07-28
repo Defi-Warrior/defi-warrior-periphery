@@ -83,6 +83,7 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
     // mint new NFT character
     function mintCharacter(address token0, address token1, uint256 amount0In, uint256 amount1In) external returns (uint256 characterId) {
         require(token0 == fiwa || token1 == fiwa, "Invalid token pair, must have fiwa");
+        require(token0 != token1, "Duplicated token addresses");
         address pair = IDefiWarriorFactory(factory).getPair(token0, token1);
         (uint256 left, uint256 right) = IDefiWarriorPair(pair).estimateInputValues(amount0In, amount1In);
         require(validateTokensValue(left, right), "Invalid input tokens");
@@ -90,9 +91,7 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         TransferHelper.safeTransferFrom(token1, msg.sender, admin, amount1In); // optimistically transfer tokens
         IGemFactory(gemFactory).approveFarm(pair, msg.sender);
 
-        if (token0 == fiwa)
-            return INFTFactory(nftFactory).mint(msg.sender, token1);
-        return INFTFactory(nftFactory).mint(msg.sender, token0);
+        return INFTFactory(nftFactory).mint(msg.sender, pair);
     }
 
     // **** ADD LIQUIDITY ****
