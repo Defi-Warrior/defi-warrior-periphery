@@ -54,16 +54,5 @@ describe('UniswapV2Router02', () => {
       wallet.address, MaxUint256, overrides)
     
     await router.mintCharacter(token0.address, token1.address, expandTo18Decimals(15), expandTo18Decimals(15))
-
-    // const testLib = await deployContract(wallet, TestLib);
-
-    // console.log("testLib address: ", await testLib.pairFor(factory.address, token0.address, token1.address))
-
-    // await expect(router.addLiquidity(token0.address, token1.address, 
-    //   expandTo18Decimals(1), expandTo18Decimals(1), 
-    //   0, 0, 
-    //   wallet.address, MaxUint256, overrides))
-    //   .to.emit(router, "Fuck")
-    //   .withArgs(100, 100)
   })
 })

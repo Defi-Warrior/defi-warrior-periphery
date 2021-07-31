@@ -7,7 +7,7 @@ import { expandTo18Decimals } from './utilities'
 import DefiWarriorFactory from '@defi-warrior/core/build/DefiWarriorFactory.json'
 import IDefiWarriorPair from '@defi-warrior/core/build/IDefiWarriorPair.json'
 import PriceFeed from '@defi-warrior/core/build/PriceFeed.json'
-import NFTWarriror from '@defi-warrior/core/build/NFTWarrior.json'
+import NFTWarriror from '@defi-warrior/core/build/DefiWarrior.json'
 import GemFactory from '@defi-warrior/farm/build/GemFactory.json'
 import MintableBEP20Token from '@defi-warrior/farm/build/MintableBEP20Token.json'
 
@@ -17,14 +17,6 @@ import DefiWarriorRouter from '../../build/DefiWarriorRouter.json'
 
 const overrides = {
   gasLimit: 9999999
-}
-
-interface V1Fixture {
-  token0: Contract
-  token1: Contract
-  factory: Contract
-  router: Contract
-  nftFactory: Contract
 }
 
 interface V2Fixture {
@@ -61,15 +53,15 @@ export async function v2Fixture(provider: Web3Provider, [wallet, other]: Wallet[
   const factory = await deployContract(wallet, DefiWarriorFactory, [wallet.address])
 
   // deploy GemFactory
-  const gemFactory = await deployContract(wallet, GemFactory, [gem.address, ticket.address, wallet.address, 1])
+  const gemFactory = await deployContract(wallet, GemFactory, [gem.address, ticket.address, nftFactory.address, wallet.address, 1])
 
   // deploy routers
   const router = await deployContract(wallet, DefiWarriorRouter, [factory.address, nftFactory.address, tokenA.address, WETH.address, gemFactory.address], overrides)
 
+  await nftFactory.setGemFactory(gemFactory.address);
   await nftFactory.setRouter(router.address);
   await gem.transferOwnership(gemFactory.address)
   await ticket.transferOwnership(gemFactory.address)
-  await gemFactory.updateRouter(router.address)
   // initialize V2
   await factory.createPair(tokenA.address, tokenB.address)
   const pairAddress = await factory.getPair(tokenA.address, tokenB.address)
