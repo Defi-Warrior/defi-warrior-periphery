@@ -54,11 +54,11 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         gemFactory = _gemFactory;
     }
 
-    function updateNFTFactory(address _nftFactory) external onlyAdmin {
+    function setNFTFactory(address _nftFactory) external onlyAdmin {
         nftFactory = _nftFactory;
     }
 
-    function updateMinimumDeposit(uint256 newValue) external onlyAdmin {
+    function setMinimumDeposit(uint256 newValue) external onlyAdmin {
         MINIMUM_DEPOSIT = newValue;
     }
 
@@ -89,8 +89,7 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         require(validateTokensValue(left, right), "Invalid input tokens");
         TransferHelper.safeTransferFrom(token0, msg.sender, admin, amount0In); // optimistically transfer tokens
         TransferHelper.safeTransferFrom(token1, msg.sender, admin, amount1In); // optimistically transfer tokens
-        IGemFactory(gemFactory).approveFarm(pair, msg.sender);
-
+        
         return INFTFactory(nftFactory).mint(msg.sender, pair);
     }
 
