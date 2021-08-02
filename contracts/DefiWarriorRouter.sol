@@ -66,9 +66,8 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
     }
 
     // mint new NFT character
-    function mintCharacter(uint256 amount, uint256 plannet) external returns (uint256 characterId) {
-        require(amount >= MINIMUM_DEPOSIT, "FIWA amount must > MINIMUM_DEPOSIT");
-        TransferHelper.safeTransferFrom(fiwa, msg.sender, admin, amount); // optimistically transfer tokens
+    function mintCharacter(uint256 plannet) external returns (uint256 characterId) {
+        TransferHelper.safeTransferFrom(fiwa, msg.sender, admin, MINIMUM_DEPOSIT); // optimistically transfer tokens
         return INFTFactory(nftFactory).mint(msg.sender, plannet);
     }
 
