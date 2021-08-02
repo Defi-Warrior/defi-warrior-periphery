@@ -53,6 +53,8 @@ describe('UniswapV2Router02', () => {
       0, 0, 
       wallet.address, MaxUint256, overrides)
     
-    await router.mintCharacter(token0.address, token1.address, expandTo18Decimals(15), expandTo18Decimals(15))
+    await router.mintCharacter(0);
+    const att = await nftFactory.attributes(0);
+    console.log("att: ", att)
   })
 })

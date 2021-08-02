@@ -6,7 +6,6 @@ import { expandTo18Decimals } from './utilities'
 
 import DefiWarriorFactory from '@defi-warrior/core/build/DefiWarriorFactory.json'
 import IDefiWarriorPair from '@defi-warrior/core/build/IDefiWarriorPair.json'
-import PriceFeed from '@defi-warrior/core/build/PriceFeed.json'
 import NFTWarriror from '@defi-warrior/core/build/DefiWarrior.json'
 import GemFactory from '@defi-warrior/farm/build/GemFactory.json'
 import MintableBEP20Token from '@defi-warrior/farm/build/MintableBEP20Token.json'
@@ -22,8 +21,6 @@ const overrides = {
 interface V2Fixture {
     token0: Contract
     token1: Contract
-    oracle0: Contract
-    oracle1: Contract
     WETH: Contract
     WETHPartner: Contract
     factory: Contract
@@ -44,8 +41,6 @@ export async function v2Fixture(provider: Web3Provider, [wallet, other]: Wallet[
 
   const WETH = await deployContract(wallet, WETH9)
   const WETHPartner = await deployContract(wallet, ERC20, [expandTo18Decimals(10000)])
-  const oracle0 = await deployContract(wallet, PriceFeed, ["FIWA"])
-  const oracle1 = await deployContract(wallet, PriceFeed, ["BTC"])
 
   const nftFactory = await deployContract(wallet, NFTWarriror, ["Defi Warrior", "FIWA"], overrides);
 
@@ -56,18 +51,16 @@ export async function v2Fixture(provider: Web3Provider, [wallet, other]: Wallet[
   const gemFactory = await deployContract(wallet, GemFactory, [gem.address, ticket.address, nftFactory.address, wallet.address, 1])
 
   // deploy routers
-  const router = await deployContract(wallet, DefiWarriorRouter, [factory.address, nftFactory.address, tokenA.address, WETH.address, gemFactory.address], overrides)
+  const router = await deployContract(wallet, DefiWarriorRouter, [factory.address, nftFactory.address, tokenA.address, WETH.address], overrides)
 
   await nftFactory.setGemFactory(gemFactory.address);
   await nftFactory.setRouter(router.address);
-  await gem.transferOwnership(gemFactory.address)
-  await ticket.transferOwnership(gemFactory.address)
+  await gem.addMiner(gemFactory.address)
+  await ticket.addMiner(gemFactory.address)
   // initialize V2
   await factory.createPair(tokenA.address, tokenB.address)
   const pairAddress = await factory.getPair(tokenA.address, tokenB.address)
   const pair = new Contract(pairAddress, JSON.stringify(IDefiWarriorPair.abi), provider).connect(wallet)
-
-  await factory.setPriceFeeds(tokenA.address, oracle0.address, tokenB.address, oracle1.address);
 
   const token0Address = await pair.token0()
   const token0 = tokenA.address === token0Address ? tokenA : tokenB
@@ -87,8 +80,6 @@ export async function v2Fixture(provider: Web3Provider, [wallet, other]: Wallet[
   return {
     token0,
     token1,
-    oracle0,
-    oracle1,
     WETH,
     WETHPartner,
     factory,
