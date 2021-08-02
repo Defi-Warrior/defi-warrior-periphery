@@ -9,12 +9,9 @@ import './libraries/SafeMath.sol';
 import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';
 
-interface IGemFactory {
-    function approveFarm(address lpToken, address user) external;
-}
 
 interface INFTFactory {
-    function mint(address tokenOwner, address id) external returns (uint256);
+    function mint(address, uint256) external returns (uint256);
 }
 
 interface IDefiWarriorFactory {
@@ -31,7 +28,6 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
     address public nftFactory;
     address public fiwa;
     address public admin;
-    address public gemFactory;
 
     uint256 public MINIMUM_DEPOSIT = 3000;
 
@@ -45,13 +41,12 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         _;
     }
 
-    constructor(address _factory, address _nftFactory, address _fiwa, address _WETH, address _gemFactory) public {
+    constructor(address _factory, address _nftFactory, address _fiwa, address _WETH) public {
         factory = _factory;
         nftFactory = _nftFactory;
         fiwa = _fiwa;
         WETH = _WETH;
         admin = msg.sender;
-        gemFactory = _gemFactory;
     }
 
     function setNFTFactory(address _nftFactory) external onlyAdmin {
@@ -70,27 +65,11 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
         assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
     }
 
-    function validateTokensValue(uint256 amount0,  uint256 amount1) internal view returns (bool) {
-        if (amount0 == 0 || amount1 == 0)
-            return false;
-        if (amount0 * 100 / amount1 < 80 || amount1 * 100 / amount0 < 80)
-            return false;
-        if (amount0 + amount1 < MINIMUM_DEPOSIT)
-            return false;
-        return true;
-    }
-
     // mint new NFT character
-    function mintCharacter(address token0, address token1, uint256 amount0In, uint256 amount1In) external returns (uint256 characterId) {
-        require(token0 == fiwa || token1 == fiwa, "Invalid token pair, must have fiwa");
-        require(token0 != token1, "Duplicated token addresses");
-        address pair = IDefiWarriorFactory(factory).getPair(token0, token1);
-        (uint256 left, uint256 right) = IDefiWarriorPair(pair).estimateInputValues(amount0In, amount1In);
-        require(validateTokensValue(left, right), "Invalid input tokens");
-        TransferHelper.safeTransferFrom(token0, msg.sender, admin, amount0In); // optimistically transfer tokens
-        TransferHelper.safeTransferFrom(token1, msg.sender, admin, amount1In); // optimistically transfer tokens
-        
-        return INFTFactory(nftFactory).mint(msg.sender, pair);
+    function mintCharacter(uint256 amount, uint256 plannet) external returns (uint256 characterId) {
+        require(amount >= MINIMUM_DEPOSIT, "FIWA amount must > MINIMUM_DEPOSIT");
+        TransferHelper.safeTransferFrom(fiwa, msg.sender, admin, amount); // optimistically transfer tokens
+        return INFTFactory(nftFactory).mint(msg.sender, plannet);
     }
 
     // **** ADD LIQUIDITY ****
