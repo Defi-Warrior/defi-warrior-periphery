@@ -2,3 +2,4 @@ node_modules/
 .idea/
 contracts/artifacts
 .vscode
+build/Combined-Json.json
