@@ -38,7 +38,6 @@ describe('UniswapV2Router02', () => {
     token1 = fixture.token1
     router = fixture.router
     factory = fixture.factory
-    nftFactory = fixture.nftFactory
   })
 
   it("Add liquidity success", async() => {
@@ -52,9 +51,5 @@ describe('UniswapV2Router02', () => {
       expandTo18Decimals(1), expandTo18Decimals(1), 
       0, 0, 
       wallet.address, MaxUint256, overrides)
-    
-    await router.mintCharacter(0);
-    const att = await nftFactory.attributes(0);
-    console.log("att: ", att)
   })
 })

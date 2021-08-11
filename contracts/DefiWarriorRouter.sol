@@ -10,10 +10,6 @@ import './interfaces/IERC20.sol';
 import './interfaces/IWETH.sol';
 
 
-interface INFTFactory {
-    function mint(address, uint256) external returns (uint256);
-}
-
 interface IDefiWarriorFactory {
     function getPair(address tokenA, address tokenB) external view returns (address pair);
     function createPair(address tokenA, address tokenB) external returns (address pair);
@@ -25,50 +21,19 @@ contract DefiWarriorRouter is IDefiWarriorRouter02 {
 
     address public immutable override factory;
     address public immutable override WETH;
-    address public nftFactory;
-    address public fiwa;
-    address public admin;
-
-    uint256 public MINIMUM_DEPOSIT = 3000;
 
     modifier ensure(uint deadline) {
         require(deadline >= block.timestamp, 'EXPIRED');
         _;
     }
 
-    modifier onlyAdmin {
-        require(msg.sender == admin, 'Forbidden access');
-        _;
-    }
-
-    constructor(address _factory, address _nftFactory, address _fiwa, address _WETH) public {
+    constructor(address _factory, address _WETH) public {
         factory = _factory;
-        nftFactory = _nftFactory;
-        fiwa = _fiwa;
         WETH = _WETH;
-        admin = msg.sender;
-    }
-
-    function setNFTFactory(address _nftFactory) external onlyAdmin {
-        nftFactory = _nftFactory;
-    }
-
-    function setMinimumDeposit(uint256 newValue) external onlyAdmin {
-        MINIMUM_DEPOSIT = newValue;
-    }
-
-    function setAdmin(address _admin) external onlyAdmin {
-        admin = _admin;
     }
 
     receive() external payable {
         assert(msg.sender == WETH); // only accept ETH via fallback from the WETH contract
-    }
-
-    // mint new NFT character
-    function mintCharacter(uint256 plannet) external returns (uint256 characterId) {
-        TransferHelper.safeTransferFrom(fiwa, msg.sender, admin, MINIMUM_DEPOSIT); // optimistically transfer tokens
-        return INFTFactory(nftFactory).mint(msg.sender, plannet);
     }
 
     // **** ADD LIQUIDITY ****
