@@ -15,10 +15,11 @@
     "contracts"
   ],
   "dependencies": {
-    "@defi-warrior/core": "1.3.0",
+    "@defi-warrior/core": "1.4.1",
     "@defi-warrior/libs": "1.0.1",
     "@defi-warrior/farm": "1.3.0",
-    "web3": "^1.4.0"
+    "web3": "^1.4.0",
+    "@truffle/hdwallet-provider": "1.6.0"
   },
   "devDependencies": {
     "@ethersproject/solidity": "5.4.0",
